@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poll App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #333;
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .hidden {
+      display: none;
+    }
+    .poll {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      background: #f9f9f9;
+      position: relative;
+    }
+    .poll h3 {
+      margin-top: 0;
+    }
+    .poll button {
+      background-color: #007bff;
+    }
+    .poll button:hover {
+      background-color: #0056b3;
+    }
+    .vote-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .vote-buttons button {
+      width: 48%;
+    }
+    .list {
+      margin: 10px 0;
+      padding: 0;
+      list-style-type: none;
+    }
+    .list li {
+      padding: 8px;
+      background: #e9ecef;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .back-button {
+      background-color: #6c757d;
+    }
+    .back-button:hover {
+      background-color: #5a6268;
+    }
+    .required-people {
+      background: #ffdd57;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .delete-button {
+      background-color: #dc3545;
+      padding: 5px 10px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .delete-button:hover {
+      background-color: #c82333;
+    }
+    .admin-login {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+    .admin-login a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .admin-login a:hover {
+      text-decoration: underline;
+    }
+    .user-management {
+      margin-top: 20px;
+    }
+    .user-management li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .block-button {
+      background-color: #dc3545;
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+    .block-button:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login Pagina -->
+    <div id="loginPage">
+      <h1>Login</h1>
+      <input type="text" id="username" placeholder="Gebruikersnaam">
+      <input type="password" id="password" placeholder="Wachtwoord">
+      <button onclick="login()">Inloggen</button>
+      <button onclick="showRegister()">Account aanmaken</button>
+      <div class="admin-login">
+        <a href="#" onclick="showAdminLogin()">Admin login</a>
+      </div>
+    </div>
+
+    <!-- Admin Login Pagina -->
+    <div id="adminLoginPage" class="hidden">
+      <h1>Admin Login</h1>
+      <input type="text" id="adminUsername" placeholder="Gebruikersnaam">
+      <input type="password" id="adminPassword" placeholder="Wachtwoord">
+      <button onclick="adminLogin()">Inloggen</button>
+      <button onclick="showLogin()">Terug naar normaal login</button>
+    </div>
+
+    <!-- Registratie Pagina -->
+    <div id="registerPage" class="hidden">
+      <h1>Account aanmaken</h1>
+      <input type="text" id="newUsername" placeholder="Gebruikersnaam">
+      <input type="password" id="newPassword" placeholder="Wachtwoord">
+      <button onclick="register()">Registreren</button>
+      <button onclick="showLogin()">Terug naar inloggen</button>
+    </div>
+
+    <!-- Hoofdpagina -->
+    <div id="mainPage" class="hidden">
+      <h1>Polls</h1>
+      <button onclick="showCreatePoll()">+ Aanmaken</button>
+      <div id="pollsList"></div>
+    </div>
+
+    <!-- Poll Aanmaken Popup -->
+    <div id="createPollPopup" class="hidden">
+      <h2>Nieuwe Poll</h2>
+      <input type="text" id="pollTitle" placeholder="Titel">
+      <input type="datetime-local" id="pollDate">
+      <textarea id="pollDescription" placeholder="Beschrijving"></textarea>
+      <input type="number" id="requiredPeople" placeholder="Aantal benodigde Ja-stemmen" min="1">
+      <button onclick="createPoll()">Bevestigen</button>
+      <button onclick="hideCreatePoll()">Annuleren</button>
+    </div>
+
+    <!-- Meer Info Pagina -->
+    <div id="infoPage" class="hidden">
+      <h2 id="infoTitle"></h2>
+      <div class="required-people">
+        <strong>Nog nodig:</strong> <span id="remainingYes"></span> Ja-stemmen
+      </div>
+      <div class="vote-buttons">
+        <button onclick="vote('ja')">Ja</button>
+        <button onclick="vote('nee')">Nee</button>
+      </div>
+      <h3>Ja (<span id="yesCount">0</span>)</h3>
+      <ul class="list" id="yesList"></ul>
+      <h3>Nee (<span id="noCount">0</span>)</h3>
+      <ul class="list" id="noList"></ul>
+      <button class="delete-button" onclick="confirmDeletePoll(currentPollId)">Poll verwijderen</button>
+      <button class="back-button" onclick="showMainPage()">Terug</button>
+    </div>
+
+    <!-- Gebruikersbeheer Pagina -->
+    <div id="userManagementPage" class="hidden">
+      <h1>Gebruikersbeheer</h1>
+      <ul class="list user-management" id="usersList"></ul>
+      <button class="back-button" onclick="showLogin()">Terug naar login</button>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let polls = [];
+    let currentPollId = null;
+
+    // Gebruikersgegevens (tijdelijk opgeslagen)
+    const users = [
+      { username: "gebruiker1", password: "wachtwoord1", blocked: false }
+    ];
+
+    // Toon de login pagina
+    function showLogin() {
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('adminLoginPage').classList.add('hidden');
+      document.getElementById('registerPage').classList.add('hidden');
+      document.getElementById('mainPage').classList.add('hidden');
+      document.getElementById('infoPage').classList.add('hidden');
+      document.getElementById('userManagementPage').classList.add('hidden');
+    }
+
+    // Toon de admin login pagina
+    function showAdminLogin() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('adminLoginPage').classList.remove('hidden');
+    }
+
+    // Admin inloggen
+    function adminLogin() {
+      const username = document.getElementById('adminUsername').value;
+      const password = document.getElementById('adminPassword').value;
+      if (username === "admin" && password === "mooielul") {
+        document.getElementById('adminLoginPage').classList.add('hidden');
+        document.getElementById('userManagementPage').classList.remove('hidden');
+        loadUsers();
+      } else {
+        alert("Ongeldige admin gebruikersnaam of wachtwoord.");
+      }
+    }
+
+    // Toon de registratie pagina
+    function showRegister() {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('registerPage').classList.remove('hidden');
+    }
+
+    // Inloggen
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const user = users.find(u => u.username === username && u.password === password);
+      if (user) {
+        if (user.blocked) {
+          alert("Dit account is geblokkeerd.");
+          return;
+        }
+        currentUser = user;
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('mainPage').classList.remove('hidden');
+        loadPolls();
+      } else {
+        alert("Ongeldige gebruikersnaam of wachtwoord.");
+      }
+    }
+
+    // Registreren
+    function register() {
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      if (username && password) {
+        users.push({ username, password, blocked: false });
+        alert("Account aangemaakt. Je kunt nu inloggen.");
+        showLogin();
+      } else {
+        alert("Vul alle velden in.");
+      }
+    }
+
+    // Polls laden
+    function loadPolls() {
+      const pollsList = document.getElementById('pollsList');
+      pollsList.innerHTML = '';
+      polls.forEach((poll, index) => {
+        const pollElement = document.createElement('div');
+        pollElement.className = 'poll';
+        pollElement.innerHTML = `
+          <h3>${poll.title}</h3>
+          <p>${poll.date}</p>
+          <p>Benodigde Ja-stemmen: ${poll.requiredPeople}</p>
+          <button onclick="showInfoPage(${index})">Meer info</button>
+        `;
+        pollsList.appendChild(pollElement);
+      });
+    }
+
+    // Toon de poll aanmaken popup
+    function showCreatePoll() {
+      document.getElementById('createPollPopup').classList.remove('hidden');
+    }
+
+    // Verberg de poll aanmaken popup
+    function hideCreatePoll() {
+      document.getElementById('createPollPopup').classList.add('hidden');
+    }
+
+    // Poll aanmaken
+    function createPoll() {
+      const title = document.getElementById('pollTitle').value;
+      const date = document.getElementById('pollDate').value;
+      const description = document.getElementById('pollDescription').value;
+      const requiredPeople = parseInt(document.getElementById('requiredPeople').value, 10);
+
+      if (title && date && requiredPeople > 0) {
+        polls.push({
+          id: polls.length,
+          title,
+          date,
+          description,
+          requiredPeople,
+          responses: { ja: [], nee: [] }
+        });
+        hideCreatePoll();
+        loadPolls();
+      } else {
+        alert("Vul alle velden in en zorg dat het aantal benodigde Ja-stemmen groter is dan 0.");
+      }
+    }
+
+    // Toon de meer info pagina
+    function showInfoPage(pollId) {
+      currentPollId = pollId;
+      const poll = polls[pollId];
+      document.getElementById('infoTitle').textContent = poll.title;
+      updateInfoPage();
+      document.getElementById('mainPage').classList.add('hidden');
+      document.getElementById('infoPage').classList.remove('hidden');
+    }
+
+    // Update de meer info pagina
+    function updateInfoPage() {
+      const poll = polls[currentPollId];
+      const remainingYes = poll.requiredPeople - poll.responses.ja.length;
+
+      document.getElementById('yesList').innerHTML = poll.responses.ja.map(user => `<li>${user}</li>`).join('');
+      document.getElementById('noList').innerHTML = poll.responses.nee.map(user => `<li>${user}</li>`).join('');
+      document.getElementById('yesCount').textContent = poll.responses.ja.length;
+      document.getElementById('noCount').textContent = poll.responses.nee.length;
+      document.getElementById('remainingYes').textContent = remainingYes > 0 ? remainingYes : 0;
+    }
+
+    // Stemmen
+    function vote(answer) {
+      const poll = polls[currentPollId];
+      const userIndexJa = poll.responses.ja.indexOf(currentUser.username);
+      const userIndexNee = poll.responses.nee.indexOf(currentUser.username);
+
+      // Verwijder het vorige antwoord van de gebruiker
+      if (userIndexJa !== -1) poll.responses.ja.splice(userIndexJa, 1);
+      if (userIndexNee !== -1) poll.responses.nee.splice(userIndexNee, 1);
+
+      // Voeg het nieuwe antwoord toe
+      if (answer === 'nee') {
+        const reason = prompt("Geef een reden:");
+        if (reason) {
+          poll.responses.nee.push(`${currentUser.username} (${reason})`);
+        }
+      } else {
+        poll.responses.ja.push(currentUser.username);
+      }
+
+      // Update de lijst
+      updateInfoPage();
+    }
+
+    // Poll verwijderen met dubbele bevestiging
+    function confirmDeletePoll(pollId) {
+      const poll = polls[pollId];
+      const confirm1 = confirm(`Weet je zeker dat je de poll "${poll.title}" wilt verwijderen?`);
+      if (confirm1) {
+        const confirm2 = confirm("Deze actie kan niet ongedaan worden gemaakt. Weet je het zeker?");
+        if (confirm2) {
+          polls.splice(pollId, 1);
+          loadPolls();
+          alert("Poll succesvol verwijderd.");
+          showMainPage();
+        }
+      }
+    }
+
+    // Gebruikersbeheer laden
+    function loadUsers() {
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '';
+      users.forEach((user, index) => {
+        const userElement = document.createElement('li');
+        userElement.innerHTML = `
+          <span>${user.username} ${user.blocked ? '(Geblokkeerd)' : ''}</span>
+          <button class="block-button" onclick="toggleBlockUser(${index})">${user.blocked ? 'Deblokkeren' : 'Blokkeren'}</button>
+        `;
+        usersList.appendChild(userElement);
+      });
+    }
+
+    // Gebruiker blokkeren/deblokkeren
+    function toggleBlockUser(userIndex) {
+      const user = users[userIndex];
+      user.blocked = !user.blocked;
+
+      // Verwijder antwoorden van geblokkeerde gebruiker uit alle polls
+      if (user.blocked) {
+        polls.forEach(poll => {
+          poll.responses.ja = poll.responses.ja.filter(response => response !== user.username);
+          poll.responses.nee = poll.responses.nee.filter(response => !response.startsWith(user.username));
+        });
+      }
+
+      loadUsers();
+      alert(`Gebruiker ${user.username} is ${user.blocked ? 'geblokkeerd' : 'gedeblokkeerd'}.`);
+    }
+
+    // Terug naar de hoofdpagina
+    function showMainPage() {
+      document.getElementById('infoPage').classList.add('hidden');
+      document.getElementById('mainPage').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
